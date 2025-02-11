@@ -3,7 +3,7 @@
   Skeleton Author: Joshua A. Levine
   Modified by: Amir Mohammad Esmaieeli Sikaroudi
   Email: amesmaieeli@email.arizona.edu
-  */
+*/
 
 
 //access DOM elements we'll use
@@ -11,7 +11,12 @@ var input = document.getElementById("load_image");
 var canvas = document.getElementById('canvas');
 var ctx = canvas.getContext('2d');
 
+// The width and height of the image
+var width = 0;
+var height = 0;
+// The image data
 var ppm_img_data;
+angle = 0;
 
 //Function to process upload
 var upload = function () {
@@ -26,26 +31,89 @@ var upload = function () {
             //if successful, file data has the contents of the uploaded file
             var file_data = fReader.result;
             parsePPM(file_data);
+
+            /*
+            * TODO: ADD CODE HERE TO DO 2D TRANSFORMATION and ANIMATION
+            * Modify any code if needed
+            * Hint: Write a rotation method, and call WebGL APIs to reuse the method for animation
+            */
+	    
+            // *** The code below is for the template to show you how to use matrices and update pixels on the canvas.
+            // *** Modify/remove the following code and implement animation
+
+        rotate();
         }
-
-        /*
-        * TODO: ADD CODE HERE TO DO 2D TRANSFORMATION and ANIMATION
-        * Modify any code if needed
-        * Hint: Write a rotation method, and call WebGL APIs to reuse the method for animation
-        */
-
-
     }
 }
 
+function rotate(){
+    var newImageData = ctx.createImageData(width, height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    angle = angle+30 % 360;
+    var transBackMatrix = GetTranslationMatrix(-(width/2), -(height/2));
+    var rotationMatrix = GetRotationMatrix(angle);
+    var transMatrix = GetTranslationMatrix(width/2, height/2);
+
+    var matrix = MultiplyMatrixMatrix(transMatrix, rotationMatrix);
+    matrix = MultiplyMatrixMatrix(matrix, transBackMatrix);
+
+    for (var i = 0; i < ppm_img_data.data.length; i += 4){
+        var pixel = [Math.floor(i / 4) % width, 
+            Math.floor(i / 4) / width, 1];
+            
+
+        var samplePixel = MultiplyMatrixVector(matrix, pixel);
+
+        samplePixel[0] = Math.floor(samplePixel[0]);
+        samplePixel[1] = Math.floor(samplePixel[1]);
+        
+        if (samplePixel[0] >= 0 && samplePixel[0] < width &&
+            samplePixel[1] >= 0 && samplePixel[1] < height) {
+            setPixelColor(newImageData, samplePixel, i);
+        }  
+    }
+    
+
+    ctx.putImageData(newImageData, canvas.width/2 - width/2, canvas.height/2 - height/2);
+
+
+    showMatrix(matrix);
+
+    requestAnimationFrame(rotate);
+
+}
+
+// Show transformation matrix on HTML
+function showMatrix(matrix){
+    for(let i=0;i<matrix.length;i++){
+        for(let j=0;j<matrix[i].length;j++){
+            matrix[i][j]=Math.floor((matrix[i][j]*100))/100;
+        }
+    }
+    document.getElementById("row1").innerHTML = "row 1:[ " + matrix[0].toString().replaceAll(",",",\t") + " ]";
+    document.getElementById("row2").innerHTML = "row 2:[ " + matrix[1].toString().replaceAll(",",",\t") + " ]";
+    document.getElementById("row3").innerHTML = "row 3:[ " + matrix[2].toString().replaceAll(",",",\t") + " ]";
+}
+
+// Sets the color of a pixel in the new image data
+function setPixelColor(newImageData, samplePixel, i){
+    var offset = ((samplePixel[1] - 1) * width + samplePixel[0] - 1) * 4;
+
+    // Set the new pixel color
+    newImageData.data[i    ] = ppm_img_data.data[offset    ];
+    newImageData.data[i + 1] = ppm_img_data.data[offset + 1];
+    newImageData.data[i + 2] = ppm_img_data.data[offset + 2];
+    newImageData.data[i + 3] = 255;
+}
+
 // Load PPM Image to Canvas
+// Untouched from the original code
 function parsePPM(file_data){
     /*
    * Extract header
    */
     var format = "";
-    var width = 0;
-    var height = 0;
     var max_v = 0;
     var lines = file_data.split(/#[^\n]*\s*|\s+/); // split text by whitespace or text following '#' ending with whitespace
     var counter = 0;
@@ -81,8 +149,8 @@ function parsePPM(file_data){
         bytes[i] = raw_data.charCodeAt(i);
     }
     // update width and height of canvas
-    document.getElementById("canvas").setAttribute("width", width);
-    document.getElementById("canvas").setAttribute("height", height);
+    document.getElementById("canvas").setAttribute("width", window.innerWidth);
+    document.getElementById("canvas").setAttribute("height", window.innerHeight);
     // create ImageData object
     var image_data = ctx.createImageData(width, height);
     // fill ImageData
@@ -94,7 +162,8 @@ function parsePPM(file_data){
         image_data.data[i + 3] = 255; // A channel is deafult to 255
     }
     ctx.putImageData(image_data, canvas.width/2 - width/2, canvas.height/2 - height/2);
-    ppm_img_data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    //ppm_img_data = ctx.getImageData(0, 0, canvas.width, canvas.height);   // This gives more than just the image I want??? I think it grabs white space from top left?
+    ppm_img_data = image_data;
 }
 
 //Connect event listeners
