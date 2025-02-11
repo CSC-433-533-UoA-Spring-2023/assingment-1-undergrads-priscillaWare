@@ -1,6 +1,6 @@
-Author: {FirstName LastName} [{UA Email}]  
+Author: Priscilla Ware [priscillaware@arizona.edu]  
 Course: Undergrad 433
-Date: [Month]. [Day], 2025
+Date: February. 09, 2025
 
 **PLEASE UPDATE THIS README TO INCLUDE:**
 * a text description of how to run your program, 
@@ -9,14 +9,19 @@ Date: [Month]. [Day], 2025
 
 Executing program:
 
+To run this program, go to the "index" webpage, click on "choose file" and select an image.
+The image with then rotate 30 degrees at a time, automatically.
 
-Description:
+
+Description: This program rotates an image by 30 degrees every frame.
+
+No known errors.
 
 
 Included files (**PLEASE ADD/UPDATE THIS LIST**):
 * index.html    -- a sample html file with a canvas
 * a01.js        -- a sample javascript file for functionality with the image uploading, and a method to parse PPM images
-* Math.js		-- some math functions that you can use and extend yourself
+* MathUtilities.js		-- some math functions that you can use and extend yourself. It contains matrix manipulations
 * bunny.ppm     -- a test image
 
 
